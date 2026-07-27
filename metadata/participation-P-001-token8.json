@@ -1,0 +1,42 @@
+{
+  "name": "Participation Certificate - Bharatanatyam Foundations - Online Workshop",
+  "description": "This certifies that Ananya Rao participated in \"Bharatanatyam Foundations - Online Workshop\" held on 2026-07-18.",
+  "image": "https://assets.example.org/certificates/participation-template.png",
+  "external_url": "https://amoy.polygonscan.com/tx/0x1a27100aa4e2065ec2bddbfccddaf42012be919d3703d7cb041a58790c14a14d",
+  "attributes": [
+    {
+      "trait_type": "Certificate Type",
+      "value": "Participation"
+    },
+    {
+      "trait_type": "Participant Name",
+      "value": "Ananya Rao"
+    },
+    {
+      "trait_type": "Workshop",
+      "value": "Bharatanatyam Foundations - Online Workshop"
+    },
+    {
+      "trait_type": "Workshop Date",
+      "value": "2026-07-18"
+    },
+    {
+      "trait_type": "Tamper Proof",
+      "value": "true"
+    },
+    {
+      "trait_type": "Verification Link",
+      "value": "https://amoy.polygonscan.com/tx/0x1a27100aa4e2065ec2bddbfccddaf42012be919d3703d7cb041a58790c14a14d"
+    }
+  ],
+  "participant": {
+    "name": "Ananya Rao",
+    "email": "ananya.rao@example.com",
+    "walletAddress": "0x9f005EdEA75bA8381C191468CCa72ABa55d688db"
+  },
+  "tokenId": "8",
+  "contractAddress": "0x5340aCB453B7951a896f238EAAb0EFF74c2DA12A",
+  "network": "amoy",
+  "transactionHash": "0x1a27100aa4e2065ec2bddbfccddaf42012be919d3703d7cb041a58790c14a14d",
+  "issuedAt": "2026-07-27T09:14:01.285Z"
+}
