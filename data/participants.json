@@ -15,7 +15,8 @@
     "txHash": "0x1a27100aa4e2065ec2bddbfccddaf42012be919d3703d7cb041a58790c14a14d",
     "verificationLink": "https://amoy.polygonscan.com/tx/0x1a27100aa4e2065ec2bddbfccddaf42012be919d3703d7cb041a58790c14a14d",
     "metadataFile": "metadata\\participation-P-001-token8.json",
-    "emailSentAt": "2026-07-26T08:55:15.977Z"
+    "emailSentAt": "2026-07-26T08:55:15.977Z",
+    "certificateLink": "https://kalachain-certifications.github.io/certification-platform/certificate/?id=8"
   },
   {
     "id": "P-002",

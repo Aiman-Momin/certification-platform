@@ -29,7 +29,8 @@
     "tokenId": "7",
     "txHash": "0xc1fd1d0e691ac1c2aad4b9c2107639512125c948ff7eeb8f4f18a969a9d83ed5",
     "verificationLink": "https://amoy.polygonscan.com/tx/0xc1fd1d0e691ac1c2aad4b9c2107639512125c948ff7eeb8f4f18a969a9d83ed5",
-    "metadataFile": "metadata\\evaluation-S-001-token7.json"
+    "metadataFile": "metadata\\evaluation-S-001-token7.json",
+    "certificateLink": "https://kalachain-certifications.github.io/certification-platform/certificate/?id=7"
   },
   {
     "id": "S-002",
@@ -61,6 +62,7 @@
     "tokenId": "3",
     "txHash": "0x6a20a50df26b0318d611419a8089939db11a0346cd56cdf2e08c30bb8ea87d6f",
     "verificationLink": "https://amoy.polygonscan.com/tx/0x6a20a50df26b0318d611419a8089939db11a0346cd56cdf2e08c30bb8ea87d6f",
-    "metadataFile": "metadata\\evaluation-S-002-token3.json"
+    "metadataFile": "metadata\\evaluation-S-002-token3.json",
+    "certificateLink": "https://kalachain-certifications.github.io/certification-platform/certificate/?id=3"
   }
 ]
