@@ -75,8 +75,11 @@
   </div>
 
 <script>
-  // Metadata JSON files (written by the mint scripts) are published here.
-  const METADATA_BASE_URL = "./data/";
+  // --- Supabase connection (same project the admin dashboard writes to) ---
+  const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
+  const SUPABASE_ANON_KEY =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc;
+;
+  // ---------------------------------------------------------------------
 
   function getTokenIdFromUrl() {
     return new URLSearchParams(window.location.search).get("id");
@@ -98,74 +101,50 @@
     return found ? found.value : "";
   }
 
-  function renderCertificate(meta) {
-    const isEvaluation = attr(meta, "Certificate Type") === "Evaluation";
-    const eventName = (meta.name || "").replace(/^(Evaluation|Participation) Certificate - /, "");
-    const issueDate = new Date(meta.issuedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-
-    const gradeRow = isEvaluation ? `
-        <div class="meta-item">
-            <span class="meta-label">Grading Evaluation Tier</span>
-            <span class="meta-value grade-badge">${escapeHtml(meta.marksAndGrade?.grade || "")} (${escapeHtml(String(meta.marksAndGrade?.totalMarks || ""))}/${escapeHtml(String(meta.marksAndGrade?.maxMarks || ""))})</span>
-        </div>` : "";
-
-    const voiceSection = isEvaluation ? `
-    <h2 class="section-title">Official Evaluator Voice Feedback (On-Chain Record)</h2>
-    <div class="evaluator-card">
-        <div class="evaluator-info">
-            <div>
-                <h3 class="evaluator-name">${escapeHtml(meta.evaluatorName || "")}</h3>
-                <p class="evaluator-title">${escapeHtml(meta.evaluatorTitle || "Evaluator")}</p>
-            </div>
-            <audio class="audio-player" controls preload="none" src="${meta.audioFeedbackUrl || ""}"></audio>
-        </div>
-        <div class="transcript-box">"${escapeHtml(meta.comments || "")}"</div>
-        <div class="hash-line"><strong>Audio Feedback Reference:</strong> ${escapeHtml(meta.audioFeedbackUrl || "")}</div>
-    </div>` : "";
+  function renderCertificate(row) {
+    // `row` is a raw Supabase `participants` table row -- a different shape
+    // than the old local metadata JSON files, so this reads different field
+    // names (snake_case, matching the database columns directly).
+    const isEvaluation = false; // the dashboard's Approve button currently only issues Phase 1 (Participation) certificates
+    const issueDate = row.created_at
+      ? new Date(row.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+      : "";
 
     document.getElementById("certificate-root").innerHTML = `
     <div class="header">
         <h1 class="academy-name">Kalachain</h1>
-        <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
+        <p class="cert-title">Certificate of Excellence</p>
     </div>
 
     <div class="recipient-section">
         <p class="statement">This is officially compiled to verify that</p>
-        <div class="name">${escapeHtml(meta.participant?.name || "")}</div>
+        <div class="name">${escapeHtml(row.name || "")}</div>
         <p class="statement">has successfully completed</p>
-        <p class="course">${escapeHtml(eventName)}</p>
+        <p class="course">${escapeHtml(row.workshop_name || "")}</p>
     </div>
 
     <div class="meta-grid">
-        ${gradeRow}
         <div class="meta-item">
             <span class="meta-label">Official Issue Date</span>
             <span class="meta-value">${issueDate}</span>
         </div>
         <div class="meta-item">
             <span class="meta-label">Verification Record ID</span>
-            <span class="meta-value">Token #${escapeHtml(String(meta.tokenId))}</span>
-        </div>
-        <div class="meta-item">
-            <span class="meta-label">Ledger Network Track</span>
-            <span class="meta-value">${escapeHtml(meta.network || "")} (Polygon)</span>
+            <span class="meta-value">Token #${escapeHtml(String(row.token_id || ""))}</span>
         </div>
     </div>
-
-    ${voiceSection}
 
     <div class="blockchain-footer">
         <div class="hosted-by">Hosted by <strong>Dr. Nalini Kanukurthy</strong></div>
         <div class="footer-row">
-            <span><strong>Contract:</strong> ${escapeHtml(meta.contractAddress || "")}</span>
             <span><strong>Status:</strong> Permanently Witnessed</span>
         </div>
         <div>
             <strong>On-Chain Transaction Hash:</strong>
-            <span class="tx-hash">${escapeHtml(meta.transactionHash || "")}</span>
+            <span class="tx-hash">${escapeHtml(row.tx_hash || "")}</span>
         </div>
         <div style="margin-top:8px;">
-            <a href="${meta.external_url}" style="color: var(--accent-gold);">Verify on PolygonScan &rarr;</a>
+            <a href="${row.verification_link}" style="color: var(--accent-gold);">Verify on PolygonScan &rarr;</a>
         </div>
     </div>
     `;
@@ -178,21 +157,24 @@
       return;
     }
     try {
-      const indexRes = await fetch(`${METADATA_BASE_URL}index.json`);
-      if (!indexRes.ok) throw new Error("Certificate index not found.");
-      const index = await indexRes.json();
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/participants?token_id=eq.${encodeURIComponent(tokenId)}&select=*`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error(`Supabase request failed (${res.status})`);
+      const rows = await res.json();
 
-      const fileName = index[tokenId];
-      if (!fileName) {
+      if (!rows.length) {
         showError(`No certificate exists for ID "${escapeHtml(tokenId)}".`);
         return;
       }
 
-      const metaRes = await fetch(`${METADATA_BASE_URL}${fileName}`);
-      if (!metaRes.ok) throw new Error("Certificate data could not be loaded.");
-      const meta = await metaRes.json();
-
-      renderCertificate(meta);
+      renderCertificate(rows[0]);
     } catch (err) {
       showError(`Something went wrong loading this certificate. (${err.message})`);
     }
