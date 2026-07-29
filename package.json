@@ -16,5 +16,9 @@
     "ethers": "^6.17.0",
     "hardhat": "^2.29.0",
     "solc": "^0.8.24"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.111.0",
+    "express": "^5.2.1"
   }
 }

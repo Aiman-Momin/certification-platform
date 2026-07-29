@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kalachain Admin — Certification Dashboard (Demo)</title>
+<style>
+  :root {
+    --navy: #11284f;
+    --gold: #b45309;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --green: #226e44;
+    --grey: #64748b;
+    --red: #a13a3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--navy);
+    margin: 0;
+    padding: 30px;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: var(--grey); font-size: 14px; margin-bottom: 30px; }
+  .card {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 24px; margin-bottom: 24px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 16px 0; }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  form .full { grid-column: 1 / -1; }
+  label { display: block; font-size: 12px; color: var(--grey); margin-bottom: 4px; }
+  input {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 14px;
+  }
+  button {
+    background: var(--navy); color: white; border: none; border-radius: 6px;
+    padding: 10px 18px; font-size: 14px; cursor: pointer; font-weight: 600;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.approve-btn { background: var(--green); padding: 6px 14px; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--grey); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .status { padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+  .status.pending { background: #fef3c7; color: #92400e; }
+  .status.approved { background: #dbeafe; color: #1e40af; }
+  .status.issued { background: #dcfce7; color: #166534; }
+  .status.minting { background: #ede9fe; color: #5b21b6; }
+  a.cert-link { color: var(--gold); font-size: 13px; text-decoration: none; font-weight: 600; }
+  .tx-hash { font-family: monospace; font-size: 11px; color: var(--grey); word-break: break-all; }
+  .empty-state { color: var(--grey); text-align: center; padding: 30px; font-size: 14px; }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <h1>Kalachain Certification Admin</h1>
+  <div class="subtitle">Demo dashboard — registration → approval → automatic on-chain minting</div>
+
+  <div class="card">
+    <h2>Register New Participant</h2>
+    <form id="register-form">
+      <div>
+        <label>Full Name</label>
+        <input type="text" id="name" required>
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="email">
+      </div>
+      <div>
+        <label>Wallet Address</label>
+        <input type="text" id="walletAddress" required placeholder="0x...">
+      </div>
+      <div>
+        <label>Workshop Name</label>
+        <input type="text" id="workshopName" required>
+      </div>
+      <div>
+        <label>Workshop Date</label>
+        <input type="date" id="workshopDate">
+      </div>
+      <div class="full">
+        <button type="submit">Register Participant</button>
+      </div>
+    </form>
+    <div class="error-msg" id="register-error"></div>
+  </div>
+
+  <div class="card">
+    <h2>Participants</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Workshop</th>
+          <th>Approval</th>
+          <th>Certificate</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="participants-body">
+        <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Issue Evaluation Certificate (Phase 2)</h2>
+    <form id="evaluation-form">
+      <div>
+        <label>Participant Name</label>
+        <input type="text" id="eval-participantName" required>
+      </div>
+      <div>
+        <label>Wallet Address</label>
+        <input type="text" id="eval-walletAddress" required placeholder="0x...">
+      </div>
+      <div class="full">
+        <label>Event Name</label>
+        <input type="text" id="eval-eventName" required>
+      </div>
+      <div>
+        <label>Evaluator Name</label>
+        <input type="text" id="eval-evaluatorName" required>
+      </div>
+      <div>
+        <label>Evaluator Title</label>
+        <input type="text" id="eval-evaluatorTitle" placeholder="e.g. Chief Evaluator">
+      </div>
+      <div>
+        <label>Marks (out of 100)</label>
+        <input type="number" id="eval-marksTotal" min="0" max="100">
+      </div>
+      <div>
+        <label>Grade</label>
+        <input type="text" id="eval-grade" required placeholder="e.g. A, B+">
+      </div>
+      <div class="full">
+        <label>Written Comments</label>
+        <input type="text" id="eval-comments">
+      </div>
+      <div class="full">
+        <label>Audio Feedback URL (IPFS/Pinata link)</label>
+        <input type="text" id="eval-audioUrl" placeholder="https://gateway.pinata.cloud/ipfs/...">
+      </div>
+      <div class="full">
+        <button type="submit">Issue Evaluation Certificate</button>
+      </div>
+    </form>
+    <div class="error-msg" id="evaluation-error"></div>
+  </div>
+
+  <div class="card">
+    <h2>Evaluation Certificates</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Event</th>
+          <th>Grade</th>
+          <th>Certificate</th>
+        </tr>
+      </thead>
+      <tbody id="evaluations-body">
+        <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  const API = "/api/participants";
+
+  async function loadParticipants() {
+    const res = await fetch(API);
+    const data = await res.json();
+    renderTable(data);
+  }
+
+  function renderTable(participants) {
+    const body = document.getElementById("participants-body");
+    if (!participants.length) {
+      body.innerHTML = `<tr><td colspan="5" class="empty-state">No participants yet — register one above.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = participants.map(p => {
+      const approvalBadge = p.approval_status === "Approved"
+        ? `<span class="status approved">Approved</span>`
+        : `<span class="status pending">Pending</span>`;
+
+      let certCell;
+      if (p.certificate_status === "Issued") {
+        certCell = `
+          <span class="status issued">Issued</span><br>
+          <a class="cert-link" href="${p.verification_link}" target="_blank">View Transaction →</a><br>
+          <span class="tx-hash">${p.tx_hash}</span>`;
+      } else if (p.approval_status === "Approved") {
+        certCell = `<span class="status minting">Minting...</span>`;
+      } else {
+        certCell = `<span class="status pending">Not issued</span>`;
+      }
+
+      const actionCell = p.approval_status !== "Approved"
+        ? `<button class="approve-btn" onclick="approveParticipant('${p.id}', this)">Approve</button>`
+        : "";
+
+      return `
+        <tr>
+          <td>${escapeHtml(p.name)}</td>
+          <td>${escapeHtml(p.workshop_name)}</td>
+          <td>${approvalBadge}</td>
+          <td>${certCell}</td>
+          <td>${actionCell}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  async function approveParticipant(id, btnEl) {
+    btnEl.disabled = true;
+    btnEl.textContent = "Approving...";
+    try {
+      const res = await fetch(`${API}/${id}/approve`, { method: "POST" });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Approval failed");
+      await loadParticipants(); // refresh to show the newly minted certificate
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+      await loadParticipants();
+    }
+  }
+
+  document.getElementById("register-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("register-error");
+    errorEl.textContent = "";
+
+    const payload = {
+      name: document.getElementById("name").value,
+      email: document.getElementById("email").value,
+      walletAddress: document.getElementById("walletAddress").value,
+      workshopName: document.getElementById("workshopName").value,
+      workshopDate: document.getElementById("workshopDate").value,
+    };
+
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Registration failed");
+      e.target.reset();
+      await loadParticipants();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  });
+
+  loadParticipants();
+  setInterval(loadParticipants, 5000); // simple live-refresh, mimics Supabase realtime
+
+  // --- Phase 2: Evaluations ---
+  const EVAL_API = "/api/evaluations";
+
+  async function loadEvaluations() {
+    const res = await fetch(EVAL_API);
+    const data = await res.json();
+    renderEvaluationsTable(data);
+  }
+
+  function renderEvaluationsTable(evaluations) {
+    const body = document.getElementById("evaluations-body");
+    if (!evaluations.length) {
+      body.innerHTML = `<tr><td colspan="4" class="empty-state">No evaluation certificates yet — issue one above.</td></tr>`;
+      return;
+    }
+    body.innerHTML = evaluations.map(e => {
+      let certCell;
+      if (e.certificate_status === "Issued") {
+        certCell = `
+          <span class="status issued">Issued</span><br>
+          <a class="cert-link" href="${e.verification_link}" target="_blank">View Transaction →</a><br>
+          <span class="tx-hash">${e.tx_hash}</span>`;
+      } else {
+        certCell = `<span class="status minting">Processing...</span>`;
+      }
+      return `
+        <tr>
+          <td>${escapeHtml(e.participant_name)}</td>
+          <td>${escapeHtml(e.event_name)}</td>
+          <td>${escapeHtml(e.grade)} ${e.marks_total ? `(${e.marks_total}/${e.marks_max})` : ""}</td>
+          <td>${certCell}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  document.getElementById("evaluation-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("evaluation-error");
+    errorEl.textContent = "";
+
+    const payload = {
+      participantName: document.getElementById("eval-participantName").value,
+      walletAddress: document.getElementById("eval-walletAddress").value,
+      eventName: document.getElementById("eval-eventName").value,
+      evaluatorName: document.getElementById("eval-evaluatorName").value,
+      evaluatorTitle: document.getElementById("eval-evaluatorTitle").value,
+      marksTotal: parseInt(document.getElementById("eval-marksTotal").value) || null,
+      grade: document.getElementById("eval-grade").value,
+      comments: document.getElementById("eval-comments").value,
+      audioFeedbackUrl: document.getElementById("eval-audioUrl").value,
+    };
+
+    const submitBtn = e.target.querySelector("button");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Issuing & Minting...";
+
+    try {
+      const res = await fetch(EVAL_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Failed to issue evaluation certificate");
+      e.target.reset();
+      await loadEvaluations();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Issue Evaluation Certificate";
+    }
+  });
+
+  loadEvaluations();
+  setInterval(loadEvaluations, 5000);
+</script>
+</body>
+</html>

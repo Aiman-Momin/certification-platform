@@ -77,8 +77,7 @@
 <script>
   // --- Supabase connection (same project the admin dashboard writes to) ---
   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
-;
+  const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
   // ---------------------------------------------------------------------
 
   function getTokenIdFromUrl() {
@@ -101,29 +100,52 @@
     return found ? found.value : "";
   }
 
-  function renderCertificate(row) {
-    // `row` is a raw Supabase `participants` table row -- a different shape
-    // than the old local metadata JSON files, so this reads different field
-    // names (snake_case, matching the database columns directly).
-    const isEvaluation = false; // the dashboard's Approve button currently only issues Phase 1 (Participation) certificates
+  function renderCertificate(row, isEvaluation) {
+    // `row` is a raw Supabase table row -- either from `participants`
+    // (Phase 1) or `evaluations` (Phase 2). Field names differ slightly
+    // between the two tables, so we branch on `isEvaluation`.
     const issueDate = row.created_at
       ? new Date(row.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "";
 
+    const gradeRow = isEvaluation ? `
+        <div class="meta-item">
+            <span class="meta-label">Grading Evaluation Tier</span>
+            <span class="meta-value grade-badge">${escapeHtml(row.grade || "")}${row.marks_total ? ` (${escapeHtml(String(row.marks_total))}/${escapeHtml(String(row.marks_max || 100))})` : ""}</span>
+        </div>` : "";
+
+    const voiceSection = isEvaluation ? `
+    <h2 class="section-title">Official Evaluator Voice Feedback (On-Chain Record)</h2>
+    <div class="evaluator-card">
+        <div class="evaluator-info">
+            <div>
+                <h3 class="evaluator-name">${escapeHtml(row.evaluator_name || "")}</h3>
+                <p class="evaluator-title">${escapeHtml(row.evaluator_title || "Evaluator")}</p>
+            </div>
+            ${row.audio_feedback_url ? `<audio class="audio-player" controls preload="none" src="${row.audio_feedback_url}"></audio>` : ""}
+        </div>
+        ${row.comments ? `<div class="transcript-box">"${escapeHtml(row.comments)}"</div>` : ""}
+        ${row.audio_feedback_url ? `<div class="hash-line"><strong>Audio Feedback Reference:</strong> ${escapeHtml(row.audio_feedback_url)}</div>` : ""}
+    </div>` : "";
+
+    const name = isEvaluation ? row.participant_name : row.name;
+    const eventName = isEvaluation ? row.event_name : row.workshop_name;
+
     document.getElementById("certificate-root").innerHTML = `
     <div class="header">
         <h1 class="academy-name">Kalachain</h1>
-        <p class="cert-title">Certificate of Excellence</p>
+        <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
     </div>
 
     <div class="recipient-section">
-        <p class="statement">This is officially compiled to verify that</p>
-        <div class="name">${escapeHtml(row.name || "")}</div>
+        <p class="statement">${isEvaluation ? "Awarded to" : "This is officially compiled to verify that"}</p>
+        <div class="name">${escapeHtml(name || "")}</div>
         <p class="statement">has successfully completed</p>
-        <p class="course">${escapeHtml(row.workshop_name || "")}</p>
+        <p class="course">${escapeHtml(eventName || "")}</p>
     </div>
 
     <div class="meta-grid">
+        ${gradeRow}
         <div class="meta-item">
             <span class="meta-label">Official Issue Date</span>
             <span class="meta-value">${issueDate}</span>
@@ -133,6 +155,8 @@
             <span class="meta-value">Token #${escapeHtml(String(row.token_id || ""))}</span>
         </div>
     </div>
+
+    ${voiceSection}
 
     <div class="blockchain-footer">
         <div class="hosted-by">Hosted by <strong>Dr. Nalini Kanukurthy</strong></div>
@@ -150,6 +174,20 @@
     `;
   }
 
+  async function fetchFromTable(table, tokenId) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${table}?token_id=eq.${encodeURIComponent(tokenId)}&select=*`,
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
+    if (!res.ok) throw new Error(`Supabase request failed (${res.status})`);
+    return res.json();
+  }
+
   async function loadCertificate() {
     const tokenId = getTokenIdFromUrl();
     if (!tokenId) {
@@ -157,24 +195,20 @@
       return;
     }
     try {
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/participants?token_id=eq.${encodeURIComponent(tokenId)}&select=*`,
-        {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-      if (!res.ok) throw new Error(`Supabase request failed (${res.status})`);
-      const rows = await res.json();
+      // Check both tables -- a token ID belongs to either one or the other,
+      // never both, since minting always increments the same shared counter.
+      const [participantRows, evaluationRows] = await Promise.all([
+        fetchFromTable("participants", tokenId),
+        fetchFromTable("evaluations", tokenId),
+      ]);
 
-      if (!rows.length) {
+      if (evaluationRows.length) {
+        renderCertificate(evaluationRows[0], true);
+      } else if (participantRows.length) {
+        renderCertificate(participantRows[0], false);
+      } else {
         showError(`No certificate exists for ID "${escapeHtml(tokenId)}".`);
-        return;
       }
-
-      renderCertificate(rows[0]);
     } catch (err) {
       showError(`Something went wrong loading this certificate. (${err.message})`);
     }
