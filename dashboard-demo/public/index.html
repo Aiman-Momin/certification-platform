@@ -195,11 +195,13 @@
 
       let certCell;
       if (p.certificate_status === "Issued") {
-        certCell = `
-          <span class="status issued">Issued</span><br>
-          <a class="cert-link" href="${p.verification_link}" target="_blank">View Transaction →</a><br>
-          <span class="tx-hash">${p.tx_hash}</span>`;
-      } else if (p.approval_status === "Approved") {
+  const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${p.token_id}`;
+  certCell = `
+    <span class="status issued">Issued</span><br>
+    <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a><br>
+    <a class="cert-link" href="${p.verification_link}" target="_blank" style="color: var(--grey);">View Transaction →</a><br>
+    <span class="tx-hash">${p.tx_hash}</span>`;
+} else if (p.approval_status === "Approved") {
         certCell = `<span class="status minting">Minting...</span>`;
       } else {
         certCell = `<span class="status pending">Not issued</span>`;
@@ -289,11 +291,13 @@
     body.innerHTML = evaluations.map(e => {
       let certCell;
       if (e.certificate_status === "Issued") {
-        certCell = `
-          <span class="status issued">Issued</span><br>
-          <a class="cert-link" href="${e.verification_link}" target="_blank">View Transaction →</a><br>
-          <span class="tx-hash">${e.tx_hash}</span>`;
-      } else {
+  const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${e.token_id}`;
+  certCell = `
+    <span class="status issued">Issued</span><br>
+    <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a><br>
+    <a class="cert-link" href="${e.verification_link}" target="_blank" style="color: var(--grey);">View Transaction →</a><br>
+    <span class="tx-hash">${e.tx_hash}</span>`;
+} else {
         certCell = `<span class="status minting">Processing...</span>`;
       }
       return `
