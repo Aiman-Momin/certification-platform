@@ -8,55 +8,121 @@
   :root {
     --paper: #fdf6ec;
     --paper-edge: #f7ecd9;
-    --ink: #4a3524;
-    --ink-soft: #7a6552;
+    --ink: #3d2b18;
+    --ink-soft: #705d46;
     --gold: #b8722e;
-    --gold-deep: #96591f;
-    --card-bg: #fbeed9;
-    --card-border: #e8d3ab;
-    --border-color: #e8d3ab;
+    --gold-deep: #7a562b;
+    --card-bg: #f8ecd7;
+    --card-border: #e5d2aa;
+    --border-color: #e5d2aa;
   }
   * { box-sizing: border-box; }
   body {
     font-family: 'Georgia', 'Times New Roman', serif;
-    background: #ece5d8;
+    background: #e8dfd3;
     color: var(--ink);
     margin: 0;
-    padding: 40px 20px;
+    padding: 24px;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     min-height: 100vh;
   }
   .certificate-container {
     background: var(--paper);
-    max-width: 720px;
-    width: 100%;
-    padding: 60px 55px 45px;
+    max-width: 1000px;
+    width: min(100%, 1000px);
+    min-height: 640px;
+    padding: 52px 48px 42px;
     border: 3px solid var(--gold);
-    border-radius: 2px;
-    box-shadow: 0 8px 30px rgba(150,89,31,0.12);
+    border-radius: 4px;
+    box-shadow: 0 12px 32px rgba(120, 68, 24, 0.15);
     position: relative;
     overflow: hidden;
   }
   .certificate-container::before {
-    content: ""; position: absolute; inset: 9px;
+    content: ""; position: absolute; inset: 11px;
     border: 1px solid var(--gold); opacity: 0.55; pointer-events: none;
   }
   .corner-flourish {
-    position: absolute; width: 130px; height: 130px; opacity: 0.5; pointer-events: none;
+    position: absolute; width: 130px; height: 130px; opacity: 0.45; pointer-events: none;
   }
   .corner-flourish.top-right { top: -10px; right: -10px; }
   .corner-flourish.bottom-left { bottom: -10px; left: -10px; transform: rotate(180deg); }
 
-  .header { text-align: center; margin-bottom: 8px; position: relative; z-index: 1; }
-  .logo-badge {
-    position: absolute; top: -10px; left: -5px; width: 54px; height: 54px;
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    text-align: center;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
   }
-  .arc-name { width: 100%; height: 130px; margin-bottom: -18px; }
+  .logo-badge {
+    flex: 0 0 auto;
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: rgba(248, 238, 215, 0.95);
+    border: 1px solid var(--gold);
+    padding: 10px;
+  }
+  .logo-badge img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+  .arc-name {
+    width: min(100%, 580px);
+    height: 110px;
+    margin-bottom: 0;
+  }
   .arc-name text {
-    font-family: Georgia, serif; font-size: 15.5px; font-weight: 700;
-    letter-spacing: 2.5px; fill: var(--gold-deep);
+    font-family: 'Georgia', serif;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 2.8px;
+    fill: var(--ink);
+  }
+  .cert-title {
+    font-size: 15px;
+    letter-spacing: 5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0;
+  }
+  .title-rule { width: 90px; height: 1px; background: var(--gold); opacity: 0.75; margin: 10px auto 0; }
+
+  @media (max-width: 900px) {
+    .certificate-container {
+      padding: 34px 26px 30px;
+      min-height: auto;
+    }
+    .logo-badge { width: 78px; height: 78px; }
+    .arc-name { height: 90px; width: 100%; }
+    .header { gap: 14px; }
+    .name { font-size: 34px; }
+    .course { font-size: 17px; }
+    .meta-grid { gap: 12px; padding: 14px 16px; }
+    .evaluator-card { padding: 16px; }
+  }
+  @media (max-width: 640px) {
+    body { padding: 16px; }
+    .certificate-container { padding: 22px 18px 22px; }
+    .logo-badge { width: 64px; height: 64px; }
+    .cert-title { font-size: 13px; }
+    .name { font-size: 30px; }
+    .course { font-size: 15px; }
+    .meta-grid { grid-template-columns: 1fr; }
+    .evaluator-card { flex-direction: column; }
+    .evaluator-right { min-width: auto; }
   }
   .cert-title {
     font-size: 15px; letter-spacing: 5px; color: var(--gold);
@@ -218,18 +284,19 @@
     </svg>
 
     <div class="header">
-      <svg class="logo-badge" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="30" cy="30" r="27" fill="var(--paper)" stroke="var(--gold)" stroke-width="2"/>
-        <text x="30" y="40" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="var(--gold-deep)">K</text>
-      </svg>
+      <div class="logo-badge">
+        <img src="kalachain-logo.jpeg" alt="Kalachain logo">
+      </div>
       <svg class="arc-name" viewBox="0 0 500 130" xmlns="http://www.w3.org/2000/svg">
         <path id="arcPath" d="M 40,120 A 210,210 0 0 1 460,120" fill="none"/>
         <text>
           <textPath href="#arcPath" startOffset="50%" text-anchor="middle">KALACHAIN CREATIVE TECHNOLOGIES</textPath>
         </text>
       </svg>
-      <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
-      <div class="title-rule"></div>
+      <div>
+        <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
+        <div class="title-rule"></div>
+      </div>
     </div>
 
     <div class="recipient-section">
