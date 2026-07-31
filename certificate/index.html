@@ -6,20 +6,20 @@
 <title>Certificate Verification - Kalachain</title>
 <style>
   :root {
-    --paper: #fdf6ec;
-    --paper-edge: #f7ecd9;
+    --paper: #ffffff;
+    --paper-edge: #fffdf8;
     --ink: #3d2b18;
-    --ink-soft: #705d46;
-    --gold: #b8722e;
-    --gold-deep: #7a562b;
-    --card-bg: #f8ecd7;
-    --card-border: #e5d2aa;
-    --border-color: #e5d2aa;
+    --ink-soft: #6f5d49;
+    --gold: #c66b12;
+    --gold-deep: #8e4d12;
+    --card-bg: #fff8ee;
+    --card-border: #e9d0a9;
+    --border-color: #e9d0a9;
   }
   * { box-sizing: border-box; }
   body {
     font-family: 'Georgia', 'Times New Roman', serif;
-    background: #e8dfd3;
+    background: #f4efe7;
     color: var(--ink);
     margin: 0;
     padding: 24px;
@@ -42,56 +42,76 @@
   }
   .certificate-container::before {
     content: ""; position: absolute; inset: 11px;
-    border: 1px solid var(--gold); opacity: 0.55; pointer-events: none;
+    border: 1px solid var(--gold);
+    opacity: 0.65;
+    pointer-events: none;
   }
   .corner-flourish {
-    position: absolute; width: 130px; height: 130px; opacity: 0.45; pointer-events: none;
+    position: absolute; width: 130px; height: 130px; opacity: 0.5; pointer-events: none;
   }
   .corner-flourish.top-right { top: -10px; right: -10px; }
   .corner-flourish.bottom-left { bottom: -10px; left: -10px; transform: rotate(180deg); }
 
   .header {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    gap: 18px;
     text-align: center;
+    width: 100%;
     margin-bottom: 18px;
     position: relative;
     z-index: 1;
+    gap: 2px;
   }
   .logo-badge {
-    flex: 0 0 auto;
-    width: 96px;
-    height: 96px;
+    position: absolute;
+    top: 20px;
+    left: 22px;
+    width: 84px;
+    height: 84px;
     display: grid;
     place-items: center;
-    border-radius: 18px;
-    background: rgba(248, 238, 215, 0.95);
-    border: 1px solid var(--gold);
-    padding: 10px;
+    border-radius: 14px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    margin: 0;
+    z-index: 2;
   }
   .logo-badge img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     display: block;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 12px;
   }
   .arc-name {
-    width: min(100%, 580px);
-    height: 110px;
-    margin-bottom: 0;
+    width: 100%;
+    max-width: 780px;
+    height: 132px;
+    margin: 0 auto;
+    display: block;
+  }
+  .arc-name svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
   }
   .arc-name text {
-    font-family: 'Georgia', serif;
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 2.8px;
     fill: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18.5px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    stroke: var(--ink);
+    stroke-width: 0.65px;
+    paint-order: stroke fill;
   }
   .cert-title {
-    font-size: 15px;
+    font-size: 17px;
     letter-spacing: 5px;
     color: var(--gold);
     text-transform: uppercase;
@@ -105,8 +125,9 @@
       padding: 34px 26px 30px;
       min-height: auto;
     }
-    .logo-badge { width: 78px; height: 78px; }
-    .arc-name { height: 90px; width: 100%; }
+    .logo-badge { width: 74px; height: 74px; }
+    .arc-name { height: 120px; max-width: 100%; }
+    .arc-name text { font-size: 16px; letter-spacing: 2.5px; stroke-width: 0.55px; }
     .header { gap: 14px; }
     .name { font-size: 34px; }
     .course { font-size: 17px; }
@@ -117,27 +138,45 @@
     body { padding: 16px; }
     .certificate-container { padding: 22px 18px 22px; }
     .logo-badge { width: 64px; height: 64px; }
-    .cert-title { font-size: 13px; }
+    .arc-name { height: 104px; }
+    .arc-name text { font-size: 13.5px; letter-spacing: 2px; stroke-width: 0.5px; }
+    .cert-title { font-size: 14px; }
     .name { font-size: 30px; }
     .course { font-size: 15px; }
     .meta-grid { grid-template-columns: 1fr; }
     .evaluator-card { flex-direction: column; }
     .evaluator-right { min-width: auto; }
   }
-  .cert-title {
-    font-size: 15px; letter-spacing: 5px; color: var(--gold);
-    text-transform: uppercase; font-weight: 600; margin: 0 0 4px;
-  }
-  .title-rule { width: 90px; height: 1px; background: var(--gold); opacity: 0.6; margin: 10px auto 0; }
 
-  .recipient-section { text-align: center; margin: 28px 0 30px; position: relative; z-index: 1; }
-  .statement { font-style: italic; color: var(--ink-soft); margin-bottom: 8px; font-size: 15.5px; }
-  .name {
-    font-size: 40px; font-weight: 700; color: var(--ink);
-    border-bottom: 1.5px solid var(--gold); display: inline-block;
-    padding-bottom: 6px; margin-bottom: 14px; letter-spacing: 0.5px;
+  .recipient-section {
+    text-align: center;
+    margin: 10px 0 30px;
+    position: relative;
+    z-index: 1;
   }
-  .course { font-size: 19px; font-weight: 600; color: var(--ink); margin: 4px 0; }
+  .statement {
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    font-size: 15.5px;
+  }
+  .name {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--ink);
+    border-bottom: 2px solid var(--gold);
+    display: inline-block;
+    padding: 0 10px 6px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+    min-width: 260px;
+  }
+  .course {
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 4px 0;
+  }
 
   .meta-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -283,16 +322,23 @@
       </g>
     </svg>
 
+    <div class="logo-badge">
+      <img src="kalachain-logo.jpeg" alt="Kalachain logo">
+    </div>
+
     <div class="header">
-      <div class="logo-badge">
-        <img src="kalachain-logo.jpeg" alt="Kalachain logo">
+      <div class="arc-name" aria-label="Kalachain Creative Technologies Private Limited">
+        <svg viewBox="0 0 780 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+          <defs>
+            <path id="brand-arc" d="M 32 112 Q 390 4 748 112" fill="none"/>
+          </defs>
+          <text>
+            <textPath href="#brand-arc" startOffset="50%" text-anchor="middle">
+              KALACHAIN CREATIVE TECHNOLOGIES PRIVATE LIMITED
+            </textPath>
+          </text>
+        </svg>
       </div>
-      <svg class="arc-name" viewBox="0 0 500 130" xmlns="http://www.w3.org/2000/svg">
-        <path id="arcPath" d="M 40,120 A 210,210 0 0 1 460,120" fill="none"/>
-        <text>
-          <textPath href="#arcPath" startOffset="50%" text-anchor="middle">KALACHAIN CREATIVE TECHNOLOGIES</textPath>
-        </text>
-      </svg>
       <div>
         <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
         <div class="title-rule"></div>
