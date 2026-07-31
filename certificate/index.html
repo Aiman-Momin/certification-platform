@@ -47,10 +47,9 @@
     pointer-events: none;
   }
   .corner-flourish {
-    position: absolute; width: 130px; height: 130px; opacity: 0.5; pointer-events: none;
+    position: absolute; width: 150px; height: 150px; opacity: 1; pointer-events: none; z-index: 0;
   }
-  .corner-flourish.top-right { top: -10px; right: -10px; }
-  .corner-flourish.bottom-left { bottom: -10px; left: -10px; transform: rotate(180deg); }
+  
 
   .header {
     display: flex;
@@ -66,9 +65,9 @@
   .logo-badge {
     position: absolute;
     top: 20px;
-    left: 22px;
-    width: 84px;
-    height: 84px;
+    left: 35px;
+    width: 100px;
+    height: 100px;
     display: grid;
     place-items: center;
     border-radius: 14px;
@@ -119,34 +118,6 @@
     margin: 0;
   }
   .title-rule { width: 90px; height: 1px; background: var(--gold); opacity: 0.75; margin: 10px auto 0; }
-
-  @media (max-width: 900px) {
-    .certificate-container {
-      padding: 34px 26px 30px;
-      min-height: auto;
-    }
-    .logo-badge { width: 74px; height: 74px; }
-    .arc-name { height: 120px; max-width: 100%; }
-    .arc-name text { font-size: 16px; letter-spacing: 2.5px; stroke-width: 0.55px; }
-    .header { gap: 14px; }
-    .name { font-size: 34px; }
-    .course { font-size: 17px; }
-    .meta-grid { gap: 12px; padding: 14px 16px; }
-    .evaluator-card { padding: 16px; }
-  }
-  @media (max-width: 640px) {
-    body { padding: 16px; }
-    .certificate-container { padding: 22px 18px 22px; }
-    .logo-badge { width: 64px; height: 64px; }
-    .arc-name { height: 104px; }
-    .arc-name text { font-size: 13.5px; letter-spacing: 2px; stroke-width: 0.5px; }
-    .cert-title { font-size: 14px; }
-    .name { font-size: 30px; }
-    .course { font-size: 15px; }
-    .meta-grid { grid-template-columns: 1fr; }
-    .evaluator-card { flex-direction: column; }
-    .evaluator-right { min-width: auto; }
-  }
 
   .recipient-section {
     text-align: center;
@@ -244,11 +215,8 @@
   </div>
 
 <script>
-  // --- Supabase connection (same project the admin dashboard writes to) ---
-   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
+  const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
-
-  // ---------------------------------------------------------------------
 
   function getTokenIdFromUrl() {
     return new URLSearchParams(window.location.search).get("id");
@@ -271,9 +239,6 @@
   }
 
   function renderCertificate(row, isEvaluation) {
-    // `row` is a raw Supabase table row -- either from `participants`
-    // (Phase 1) or `evaluations` (Phase 2). Field names differ slightly
-    // between the two tables, so we branch on `isEvaluation`.
     const issueDate = row.created_at
       ? new Date(row.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
       : "";
@@ -303,24 +268,7 @@
     const eventName = isEvaluation ? row.event_name : row.workshop_name;
 
     document.getElementById("certificate-root").innerHTML = `
-    <svg class="corner-flourish top-right" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
-      <g fill="none" stroke="var(--gold)" stroke-width="1">
-        <path d="M100,10 Q115,25 110,45 Q105,65 120,75" opacity="0.7"/>
-        <circle cx="108" cy="22" r="14" opacity="0.6"/>
-        <circle cx="120" cy="45" r="9" opacity="0.5"/>
-        <path d="M85,15 Q95,5 105,15" opacity="0.5"/>
-        <path d="M95,60 Q108,55 118,65" opacity="0.5"/>
-      </g>
-    </svg>
-    <svg class="corner-flourish bottom-left" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
-      <g fill="none" stroke="var(--gold)" stroke-width="1">
-        <path d="M100,10 Q115,25 110,45 Q105,65 120,75" opacity="0.7"/>
-        <circle cx="108" cy="22" r="14" opacity="0.6"/>
-        <circle cx="120" cy="45" r="9" opacity="0.5"/>
-        <path d="M85,15 Q95,5 105,15" opacity="0.5"/>
-        <path d="M95,60 Q108,55 118,65" opacity="0.5"/>
-      </g>
-    </svg>
+   
 
     <div class="logo-badge">
       <img src="kalachain-logo.jpeg" alt="Kalachain logo">
@@ -397,8 +345,6 @@
       return;
     }
     try {
-      // Check both tables -- a token ID belongs to either one or the other,
-      // never both, since minting always increments the same shared counter.
       const [participantRows, evaluationRows] = await Promise.all([
         fetchFromTable("participants", tokenId),
         fetchFromTable("evaluations", tokenId),
