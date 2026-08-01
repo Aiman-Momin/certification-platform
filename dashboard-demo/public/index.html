@@ -58,8 +58,16 @@
 </style>
 </head>
 <body>
-  <h1>Kalachain Certification Admin</h1>
-  <div class="subtitle">Demo dashboard — registration → approval → automatic on-chain minting</div>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <h1>Kalachain Certification Admin</h1>
+      <div class="subtitle">Demo dashboard — registration → approval → automatic on-chain minting</div>
+    </div>
+    <div style="text-align:right; font-size:13px; color:var(--grey);">
+      <div id="current-user-email"></div>
+      <button id="logout-btn" style="margin-top:6px; background:none; border:1px solid var(--border); color:var(--navy); padding:6px 14px; font-size:12px;">Sign Out</button>
+    </div>
+  </div>
 
   <div class="card">
     <h2>Register New Participant</h2>
@@ -172,8 +180,37 @@
     </table>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-  const API = "/api/participants";
+  // --- Auth guard: block access to this whole page unless logged in ---
+  const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
+  const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let currentSession = null;
+
+  async function requireAuth() {
+    const { data: { session } } = await supabaseAuth.auth.getSession();
+    if (!session) {
+      window.location.href = "login.html";
+      return false;
+    }
+    currentSession = session;
+    document.getElementById("current-user-email").textContent = session.user.email;
+    return true;
+  }
+
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    await supabaseAuth.auth.signOut();
+    window.location.href = "login.html";
+  });
+
+  // Everything below only runs once we've confirmed a valid session exists.
+  (async () => {
+    const authed = await requireAuth();
+    if (!authed) return; // requireAuth already redirected to login.html
+
+    const API = "/api/participants";
 
   async function loadParticipants() {
     const res = await fetch(API);
@@ -195,13 +232,11 @@
 
       let certCell;
       if (p.certificate_status === "Issued") {
-  const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${p.token_id}`;
-  certCell = `
-    <span class="status issued">Issued</span><br>
-    <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a><br>
-    <a class="cert-link" href="${p.verification_link}" target="_blank" style="color: var(--grey);">View Transaction →</a><br>
-    <span class="tx-hash">${p.tx_hash}</span>`;
-} else if (p.approval_status === "Approved") {
+        certCell = `
+          <span class="status issued">Issued</span><br>
+          <a class="cert-link" href="${p.verification_link}" target="_blank">View Transaction →</a><br>
+          <span class="tx-hash">${p.tx_hash}</span>`;
+      } else if (p.approval_status === "Approved") {
         certCell = `<span class="status minting">Minting...</span>`;
       } else {
         certCell = `<span class="status pending">Not issued</span>`;
@@ -241,6 +276,7 @@
       await loadParticipants();
     }
   }
+  window.approveParticipant = approveParticipant; // keep callable from inline onclick=""
 
   document.getElementById("register-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -291,13 +327,11 @@
     body.innerHTML = evaluations.map(e => {
       let certCell;
       if (e.certificate_status === "Issued") {
-  const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${e.token_id}`;
-  certCell = `
-    <span class="status issued">Issued</span><br>
-    <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a><br>
-    <a class="cert-link" href="${e.verification_link}" target="_blank" style="color: var(--grey);">View Transaction →</a><br>
-    <span class="tx-hash">${e.tx_hash}</span>`;
-} else {
+        certCell = `
+          <span class="status issued">Issued</span><br>
+          <a class="cert-link" href="${e.verification_link}" target="_blank">View Transaction →</a><br>
+          <span class="tx-hash">${e.tx_hash}</span>`;
+      } else {
         certCell = `<span class="status minting">Processing...</span>`;
       }
       return `
@@ -351,6 +385,7 @@
 
   loadEvaluations();
   setInterval(loadEvaluations, 5000);
+  })(); // end of requireAuth-gated IIFE
 </script>
 </body>
 </html>

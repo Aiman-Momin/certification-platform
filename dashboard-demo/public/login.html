@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kalachain Admin — Login</title>
+<style>
+  :root { --navy: #11284f; --gold: #b45309; --bg: #f8fafc; --border: #e2e8f0; --red: #a13a3a; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); margin: 0; min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    background: white; border: 1px solid var(--border); border-radius: 10px;
+    padding: 36px 32px; width: 100%; max-width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  h1 { font-size: 18px; color: var(--navy); margin: 0 0 4px; }
+  .subtitle { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+  label { display: block; font-size: 12px; color: #64748b; margin-bottom: 4px; margin-top: 14px; }
+  input {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+  }
+  button {
+    width: 100%; margin-top: 22px; background: var(--navy); color: white; border: none;
+    border-radius: 6px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 12px; text-align: center; min-height: 16px; }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>Kalachain Admin</h1>
+    <div class="subtitle">Sign in to manage certifications</div>
+    <form id="login-form">
+      <label>Email</label>
+      <input type="email" id="email" required autocomplete="username">
+      <label>Password</label>
+      <input type="password" id="password" required autocomplete="current-password">
+      <button type="submit" id="submit-btn">Sign In</button>
+      <div class="error-msg" id="error-msg"></div>
+    </form>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  // --- Same Supabase project as the rest of the app ---
+  const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // If already logged in, skip straight to the dashboard
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) window.location.href = "index.html";
+  })();
+
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("error-msg");
+    const btn = document.getElementById("submit-btn");
+    errorEl.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Signing in...";
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      // Deliberately generic message -- doesn't reveal whether the email
+      // exists or not, so this can't be used to fish for valid admin emails.
+      errorEl.textContent = "Incorrect email or password.";
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+      return;
+    }
+
+    window.location.href = "index.html";
+  });
+</script>
+</body>
+</html>
