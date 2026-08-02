@@ -20,6 +20,10 @@ const path = require("path");
 const fs = require("fs");
 const { ethers } = require("ethers");
 const { createClient } = require("@supabase/supabase-js");
+const multer = require("multer");
+const XLSX = require("xlsx");
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB cap
 
 const app = express();
 app.use(express.json());
@@ -234,6 +238,87 @@ app.post("/api/evaluations", async (req, res) => {
     console.error("Evaluation minting failed:", mintErr.message);
     res.status(500).json({ error: `Evaluation saved, but minting failed: ${mintErr.message}` });
   }
+});
+
+// Bulk-add participants from an uploaded Excel file. Every row is inserted
+// as approval_status = "Pending" -- deliberately NOT auto-approved. Uploading
+// a spreadsheet only gets people INTO the system; an admin still has to
+// click Approve on each one (which is what actually triggers minting), same
+// as manually-added participants. This keeps "who gets a certificate" a
+// human decision either way.
+app.post("/api/participants/bulk-upload", upload.single("file"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded." });
+  }
+
+  let rows;
+  try {
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const firstSheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheetName];
+    rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  } catch (err) {
+    return res.status(400).json({ error: `Could not read the Excel file: ${err.message}` });
+  }
+
+  if (!rows.length) {
+    return res.status(400).json({ error: "The spreadsheet appears to be empty." });
+  }
+
+  // Column names are matched case-insensitively and allow a couple of
+  // common variants, so a slightly different header wording (e.g. "Wallet"
+  // vs "Wallet Address") still works without the upload failing outright.
+  function getField(row, ...candidates) {
+    const keys = Object.keys(row);
+    for (const candidate of candidates) {
+      const match = keys.find((k) => k.trim().toLowerCase() === candidate.toLowerCase());
+      if (match && String(row[match]).trim() !== "") return String(row[match]).trim();
+    }
+    return "";
+  }
+
+  const toInsert = [];
+  const skipped = [];
+
+  rows.forEach((row, i) => {
+    const name = getField(row, "Name", "Full Name", "Participant Name");
+    const walletAddress = getField(row, "Wallet Address", "Wallet", "Wallet Addr");
+    const workshopName = getField(row, "Workshop Name", "Workshop", "Event Name");
+    const email = getField(row, "Email", "Email Address");
+    const workshopDate = getField(row, "Workshop Date", "Date");
+
+    if (!name || !walletAddress || !workshopName) {
+      skipped.push({ row: i + 2, reason: "Missing required field(s): Name, Wallet Address, or Workshop Name" });
+      return;
+    }
+
+    toInsert.push({
+      name,
+      email: email || null,
+      wallet_address: walletAddress,
+      workshop_name: workshopName,
+      workshop_date: workshopDate || null,
+      // approval_status and certificate_status default to Pending/NotIssued
+      // via the table's own column defaults -- not set here on purpose.
+    });
+  });
+
+  if (!toInsert.length) {
+    return res.status(400).json({
+      error: "No valid rows found. Make sure your spreadsheet has Name, Wallet Address, and Workshop Name columns.",
+      skipped,
+    });
+  }
+
+  const { data, error } = await supabase.from("participants").insert(toInsert).select();
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({
+    success: true,
+    addedCount: data.length,
+    skippedCount: skipped.length,
+    skipped,
+  });
 });
 
 const PORT = process.env.PORT || 3000;
