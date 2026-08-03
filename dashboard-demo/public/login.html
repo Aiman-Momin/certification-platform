@@ -107,106 +107,131 @@
     min-height: 16px; margin-top: 14px; border-radius: 7px;
   }
   .error-msg:not(:empty) { background: var(--red-100); padding: 8px 10px; }
+
+  .loading-state {
+    text-align: center; color: var(--muted); font-size: 13.5px; padding: 20px 0;
+  }
 </style>
 </head>
 <body>
-  <div class="login-card">
-    
-    <h1>Kalachain Admin</h1>
-    <div class="subtitle">Sign in to manage certifications</div>
-    <form id="login-form">
-      <label>Email</label>
-      <input type="email" id="email" required autocomplete="username">
-      <label>Password</label>
-      <input type="password" id="password" required autocomplete="current-password">
-      <button type="submit" id="submit-btn">Sign In</button>
-      <div class="error-msg" id="error-msg"></div>
-    </form>
+  <div class="login-card" id="login-card">
+    <div class="loading-state" id="initial-loading">Loading...</div>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-
-  // --- Handle invite/recovery links: show a "set password" form instead of normal login ---
-async function checkForInviteToken() {
-  const hashParams = new URLSearchParams(window.location.hash.substring(1));
-  const type = hashParams.get("type");
-
-  if (type === "invite" || type === "recovery") {
-    // Supabase-js auto-creates a session from the hash token on page load
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-      showSetPasswordForm();
-      return true;
-    }
-  }
-  return false;
-}
-
-function showSetPasswordForm() {
-  document.querySelector(".login-card").innerHTML = `
-    <h1>Set Your Password</h1>
-    <div class="subtitle">Choose a password to finish activating your account</div>
-    <form id="set-password-form">
-      <label>New Password</label>
-      <input type="password" id="new-password" required minlength="6">
-      <button type="submit">Set Password & Continue</button>
-      <div class="error-msg" id="set-password-error"></div>
-    </form>
-  `;
-
-  document.getElementById("set-password-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const errorEl = document.getElementById("set-password-error");
-    const newPassword = document.getElementById("new-password").value;
-
-    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-    if (error) {
-      errorEl.textContent = error.message;
-      return;
-    }
-    window.location.href = "index.html";
-  });
-}
-
-
-  // --- Same Supabase project as the rest of the app ---
   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-(async () => {
-  const isInvite = await checkForInviteToken();
-  if (isInvite) return; // set-password form is now showing, stop here
+  const cardEl = document.getElementById("login-card");
 
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) window.location.href = "index.html";
-})();
+  function renderLoginForm() {
+    cardEl.innerHTML = `
+      <h1>Kalachain Admin</h1>
+      <div class="subtitle">Sign in to manage certifications</div>
+      <form id="login-form">
+        <label>Email</label>
+        <input type="email" id="email" required autocomplete="username">
+        <label>Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+        <button type="submit" id="submit-btn">Sign In</button>
+        <div class="error-msg" id="error-msg"></div>
+      </form>
+    `;
 
-  document.getElementById("login-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const errorEl = document.getElementById("error-msg");
-    const btn = document.getElementById("submit-btn");
-    errorEl.textContent = "";
-    btn.disabled = true;
-    btn.textContent = "Signing in...";
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("error-msg");
+      const btn = document.getElementById("submit-btn");
+      errorEl.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Signing in...";
 
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      // Deliberately generic message -- doesn't reveal whether the email
-      // exists or not, so this can't be used to fish for valid admin emails.
-      errorEl.textContent = "Incorrect email or password.";
-      btn.disabled = false;
-      btn.textContent = "Sign In";
+      if (error) {
+        errorEl.textContent = "Incorrect email or password.";
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+        return;
+      }
+
+      window.location.href = "index.html";
+    });
+  }
+
+  function renderSetPasswordForm() {
+    cardEl.innerHTML = `
+      <h1>Set Your Password</h1>
+      <div class="subtitle">Choose a password to activate your account</div>
+      <form id="set-password-form">
+        <label>New Password</label>
+        <input type="password" id="new-password" required minlength="6" autocomplete="new-password">
+        <label>Confirm Password</label>
+        <input type="password" id="confirm-password" required minlength="6" autocomplete="new-password">
+        <button type="submit" id="set-submit-btn">Set Password & Continue</button>
+        <div class="error-msg" id="set-password-error"></div>
+      </form>
+    `;
+
+    document.getElementById("set-password-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("set-password-error");
+      const btn = document.getElementById("set-submit-btn");
+      errorEl.textContent = "";
+
+      const newPassword = document.getElementById("new-password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+
+      if (newPassword !== confirmPassword) {
+        errorEl.textContent = "Passwords do not match.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
+      const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+      if (error) {
+        errorEl.textContent = error.message;
+        btn.disabled = false;
+        btn.textContent = "Set Password & Continue";
+        return;
+      }
+
+      window.location.href = "index.html";
+    });
+  }
+
+  // --- Main flow: figure out which screen to show ---
+  (async () => {
+    // Supabase-js automatically parses invite/recovery tokens from the URL hash
+    // (e.g. #access_token=...&type=invite) on page load, before this code runs.
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const linkType = hashParams.get("type"); // "invite", "recovery", or null
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (session && (linkType === "invite" || linkType === "recovery")) {
+      // Came from an invite/reset link and has a temp session -> must set a password
+      renderSetPasswordForm();
       return;
     }
 
-    window.location.href = "index.html";
-  });
+    if (session) {
+      // Normal existing logged-in session (not from an invite link) -> go straight in
+      window.location.href = "index.html";
+      return;
+    }
+
+    // No session at all -> show normal email/password login
+    renderLoginForm();
+  })();
 </script>
 </body>
 </html>
