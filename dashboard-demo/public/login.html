@@ -126,16 +126,62 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+
+  // --- Handle invite/recovery links: show a "set password" form instead of normal login ---
+async function checkForInviteToken() {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const type = hashParams.get("type");
+
+  if (type === "invite" || type === "recovery") {
+    // Supabase-js auto-creates a session from the hash token on page load
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      showSetPasswordForm();
+      return true;
+    }
+  }
+  return false;
+}
+
+function showSetPasswordForm() {
+  document.querySelector(".login-card").innerHTML = `
+    <h1>Set Your Password</h1>
+    <div class="subtitle">Choose a password to finish activating your account</div>
+    <form id="set-password-form">
+      <label>New Password</label>
+      <input type="password" id="new-password" required minlength="6">
+      <button type="submit">Set Password & Continue</button>
+      <div class="error-msg" id="set-password-error"></div>
+    </form>
+  `;
+
+  document.getElementById("set-password-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("set-password-error");
+    const newPassword = document.getElementById("new-password").value;
+
+    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+    if (error) {
+      errorEl.textContent = error.message;
+      return;
+    }
+    window.location.href = "index.html";
+  });
+}
+
+
   // --- Same Supabase project as the rest of the app ---
   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // If already logged in, skip straight to the dashboard
-  (async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) window.location.href = "index.html";
-  })();
+(async () => {
+  const isInvite = await checkForInviteToken();
+  if (isInvite) return; // set-password form is now showing, stop here
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) window.location.href = "index.html";
+})();
 
   document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
