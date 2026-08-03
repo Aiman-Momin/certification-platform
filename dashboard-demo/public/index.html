@@ -499,16 +499,24 @@
 
   let currentSession = null;
 
-  async function requireAuth() {
-    const { data: { session } } = await supabaseAuth.auth.getSession();
-    if (!session) {
-      window.location.href = "login.html";
-      return false;
-    }
-    currentSession = session;
-    document.getElementById("current-user-email").textContent = session.user.email;
-    return true;
+async function requireAuth() {
+  // If this page was loaded via an invite/recovery link, send it to login.html
+  // (unchanged, hash preserved) so the password-setup flow actually runs.
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  if (hashParams.get("type") === "invite" || hashParams.get("type") === "recovery") {
+    window.location.href = "login.html" + window.location.hash;
+    return false;
   }
+
+  const { data: { session } } = await supabaseAuth.auth.getSession();
+  if (!session) {
+    window.location.href = "login.html";
+    return false;
+  }
+  currentSession = session;
+  document.getElementById("current-user-email").textContent = session.user.email;
+  return true;
+}
 
   document.getElementById("logout-btn").addEventListener("click", async () => {
     await supabaseAuth.auth.signOut();
