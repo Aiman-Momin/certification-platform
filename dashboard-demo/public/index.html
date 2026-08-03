@@ -52,7 +52,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---------- Header ---------- */
   .topbar {
     background: linear-gradient(180deg, var(--navy-950), var(--navy-900));
     color: #f2f5fa;
@@ -110,7 +109,6 @@
   }
   #logout-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.4); }
 
-  /* ---------- Nav tabs ---------- */
   .navbar {
     background: var(--navy-900);
     border-top: 1px solid rgba(255,255,255,0.08);
@@ -144,7 +142,6 @@
   .tab-section { display: none; }
   .tab-section.active { display: block; }
 
-  /* ---------- Layout ---------- */
   .page {
     max-width: 980px;
     margin: 0 auto;
@@ -198,7 +195,6 @@
     background: var(--gold-600); flex: none;
   }
 
-  /* ---------- Forms ---------- */
   form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
   form .full { grid-column: 1 / -1; }
   label {
@@ -238,7 +234,6 @@
     padding: 7px 15px; font-size: 12.5px;
   }
 
-  /* ---------- Table ---------- */
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   thead th {
@@ -252,7 +247,6 @@
   td.name-cell { font-weight: 600; color: var(--ink); }
   td .sub { display: block; font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 1px; }
 
-  /* ---------- Status seals ---------- */
   .seal-badge {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 4px 11px 4px 9px; border-radius: 999px;
@@ -335,7 +329,6 @@
 
   <div class="page">
 
-    <!-- ===== TAB: Register Phase 1 ===== -->
     <div class="tab-section active" id="tab-register-p1">
       <div class="phase-heading">
         <span class="phase-index">01</span>
@@ -376,7 +369,6 @@
       </div>
     </div>
 
-    <!-- ===== TAB: List Phase 1 ===== -->
     <div class="tab-section" id="tab-list-p1">
       <div class="phase-heading">
         <span class="phase-index">01</span>
@@ -405,7 +397,6 @@
       </div>
     </div>
 
-    <!-- ===== TAB: Register Phase 2 ===== -->
     <div class="tab-section" id="tab-register-p2">
       <div class="phase-heading">
         <span class="phase-index">02</span>
@@ -462,7 +453,6 @@
       </div>
     </div>
 
-    <!-- ===== TAB: List Phase 2 ===== -->
     <div class="tab-section" id="tab-list-p2">
       <div class="phase-heading">
         <span class="phase-index">02</span>
@@ -494,7 +484,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-  // --- Tab navigation ---
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -504,7 +493,6 @@
     });
   });
 
-  // --- Auth guard: block access to this whole page unless logged in ---
   const SUPABASE_URL = "https://cerszoqebrpwjbeiooxt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlcnN6b3FlYnJwd2piZWlvb3h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzgzNDEsImV4cCI6MjEwMDg1NDM0MX0.SDGcTSCcE1IPx_Q8bGeFqyWbcdYWisc-okA4fHPgSDc";
   const supabaseAuth = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -527,10 +515,9 @@
     window.location.href = "login.html";
   });
 
-  // Everything below only runs once we've confirmed a valid session exists.
   (async () => {
     const authed = await requireAuth();
-    if (!authed) return; // requireAuth already redirected to login.html
+    if (!authed) return;
 
     const API = "/api/participants";
 
@@ -554,10 +541,12 @@
 
       let certCell;
       if (p.certificate_status === "Issued") {
+        const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${p.token_id}`;
         certCell = `
           <div class="cert-cell-stack">
             <span class="seal-badge issued"><span class="hex"></span>Issued</span>
-            <a class="cert-link" href="${p.verification_link}" target="_blank">View Transaction →</a>
+            <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a>
+            <a class="cert-link" href="${p.verification_link}" target="_blank" style="color: var(--muted);">View Transaction →</a>
             <span class="tx-hash">${p.tx_hash}</span>
           </div>`;
       } else if (p.approval_status === "Approved") {
@@ -594,13 +583,13 @@
       const res = await fetch(`${API}/${id}/approve`, { method: "POST" });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Approval failed");
-      await loadParticipants(); // refresh to show the newly minted certificate
+      await loadParticipants();
     } catch (err) {
       alert(`Error: ${err.message}`);
       await loadParticipants();
     }
   }
-  window.approveParticipant = approveParticipant; // keep callable from inline onclick=""
+  window.approveParticipant = approveParticipant;
 
   document.getElementById("register-form").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -631,9 +620,8 @@
   });
 
   loadParticipants();
-  setInterval(loadParticipants, 5000); // simple live-refresh, mimics Supabase realtime
+  setInterval(loadParticipants, 5000);
 
-  // --- Phase 2: Evaluations ---
   const EVAL_API = "/api/evaluations";
 
   async function loadEvaluations() {
@@ -651,10 +639,12 @@
     body.innerHTML = evaluations.map(e => {
       let certCell;
       if (e.certificate_status === "Issued") {
+        const certUrl = `https://aiman-momin.github.io/certification-platform/certificate/?id=${e.token_id}`;
         certCell = `
           <div class="cert-cell-stack">
             <span class="seal-badge issued"><span class="hex"></span>Issued</span>
-            <a class="cert-link" href="${e.verification_link}" target="_blank">View Transaction →</a>
+            <a class="cert-link" href="${certUrl}" target="_blank">View Certificate →</a>
+            <a class="cert-link" href="${e.verification_link}" target="_blank" style="color: var(--muted);">View Transaction →</a>
             <span class="tx-hash">${e.tx_hash}</span>
           </div>`;
       } else {
@@ -711,7 +701,7 @@
 
   loadEvaluations();
   setInterval(loadEvaluations, 5000);
-  })(); // end of requireAuth-gated IIFE
+  })();
 </script>
 </body>
 </html>
