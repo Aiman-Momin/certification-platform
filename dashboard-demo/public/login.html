@@ -210,26 +210,34 @@
 
   // --- Main flow: figure out which screen to show ---
   (async () => {
-    // Supabase-js automatically parses invite/recovery tokens from the URL hash
-    // (e.g. #access_token=...&type=invite) on page load, before this code runs.
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const linkType = hashParams.get("type"); // "invite", "recovery", or null
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const linkType = hashParams.get("type") || queryParams.get("type");
+    const code = queryParams.get("code");
+
+    // Newer Supabase links use a "code" query param instead of a hash token —
+    // this exchanges it for a real session if present.
+    if (code) {
+      const { error } = await supabaseClient.auth.exchangeCodeForSession(window.location.href);
+      if (error) {
+        renderLoginForm();
+        return;
+      }
+    }
 
     const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (session && (linkType === "invite" || linkType === "recovery")) {
-      // Came from an invite/reset link and has a temp session -> must set a password
+    if (session && (linkType === "invite" || linkType === "recovery" || code)) {
       renderSetPasswordForm();
       return;
     }
 
     if (session) {
-      // Normal existing logged-in session (not from an invite link) -> go straight in
       window.location.href = "index.html";
       return;
     }
 
-    // No session at all -> show normal email/password login
     renderLoginForm();
   })();
 </script>
