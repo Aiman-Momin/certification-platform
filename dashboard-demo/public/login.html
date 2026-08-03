@@ -210,15 +210,20 @@
 
   // --- Main flow: figure out which screen to show ---
   (async () => {
+    // TEMPORARY DEBUG — shows the real URL before anything redirects.
+    // Remove this alert() line once we've confirmed things work.
+    if (window.location.hash || window.location.search) {
+      alert(window.location.href);
+    }
+
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const queryParams = new URLSearchParams(window.location.search);
 
-    const linkType = hashParams.get("type") || queryParams.get("type");
-    const code = queryParams.get("code");
+    const hasHashToken = hashParams.has("access_token") || hashParams.has("refresh_token");
+    const hasCodeParam = queryParams.has("code");
+    const looksLikeAuthLink = hasHashToken || hasCodeParam;
 
-    // Newer Supabase links use a "code" query param instead of a hash token —
-    // this exchanges it for a real session if present.
-    if (code) {
+    if (hasCodeParam) {
       const { error } = await supabaseClient.auth.exchangeCodeForSession(window.location.href);
       if (error) {
         renderLoginForm();
@@ -228,7 +233,8 @@
 
     const { data: { session } } = await supabaseClient.auth.getSession();
 
-    if (session && (linkType === "invite" || linkType === "recovery" || code)) {
+    if (session && looksLikeAuthLink) {
+      // Arrived via any kind of auth link (invite/recovery/magic link) -> must set a password
       renderSetPasswordForm();
       return;
     }
