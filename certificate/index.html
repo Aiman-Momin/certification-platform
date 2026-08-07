@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Certificate Verification - Kalachain</title>
 <style>
-  :root {
-    --paper: #ffffff;
-    --paper-edge: #fffdf8;
-    --ink: #3d2b18;
-    --ink-soft: #6f5d49;
-    --gold: #c66b12;
-    --gold-deep: #8e4d12;
-    --card-bg: #fff8ee;
-    --card-border: #e9d0a9;
-    --border-color: #e9d0a9;
-  }
+:root {
+  --paper: #ffffff;
+  --paper-edge: #fffdf8;
+  --ink: #14213d;
+  --ink-soft: #3d4a63;
+  --gold: #c66b12;
+  --gold-deep: #14213d;
+  --card-bg: #fff8ee;
+  --card-border: #e9d0a9;
+  --border-color: #e9d0a9;
+}
   * { box-sizing: border-box; }
   body {
     font-family: 'Georgia', 'Times New Roman', serif;
@@ -86,29 +86,17 @@
     object-position: center;
     border-radius: 12px;
   }
-  .arc-name {
-    width: 100%;
-    max-width: 780px;
-    height: 132px;
-    margin: 0 auto;
-    display: block;
-  }
-  .arc-name svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-  .arc-name text {
-    fill: var(--ink);
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 18.5px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    stroke: var(--ink);
-    stroke-width: 0.65px;
-    paint-order: stroke fill;
-  }
+ .brand-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #b91c1c;
+  text-align: center;
+  margin: 0 0 4px;
+  line-height: 1.25;
+}
 
 .workshop-by {
   font-size: 16px;
@@ -287,18 +275,8 @@
     </div>
 
     <div class="header">
-      <div class="arc-name" aria-label="Kalachain Creative Technologies Private Limited">
-        <svg viewBox="0 0 780 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-          <defs>
-            <path id="brand-arc" d="M 32 112 Q 390 4 748 112" fill="none"/>
-          </defs>
-          <text>
-            <textPath href="#brand-arc" startOffset="50%" text-anchor="middle">
-              KALACHAIN CREATIVE TECHNOLOGIES PRIVATE LIMITED
-            </textPath>
-          </text>
-        </svg>
-      </div>
+ <h2 class="brand-name">Kalachain Creative Technologies Private Limited</h2>
+
       <div>
         <p class="cert-title">Certificate of ${isEvaluation ? "Evaluation" : "Excellence"}</p>
         <p class="workshop-by">Workshop by Dr. Urvashi Mohinani</p>
